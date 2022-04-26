@@ -1,0 +1,52 @@
+version: '3.7'
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  sharedspace:
+
+
+services:
+  centrifugo:
+    image: centrifugo/centrifugo
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+    - |
+      centrifugo genconfig --config=/centrifugo/config.json
+      centrifugo --config=/centrifugo/config.json --engine=redis --redis_address="redis://redis:6379" --admin
+    ports:
+    - "8000:8000"
+    volumes:
+    - "sharedspace:/centrifugo"
+    networks:
+      - backend
+    depends_on:
+      - redis
+    ulimits:
+      nproc: 65536
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  api:
+    build: ./api
+    ports:
+     - "5000:5000"
+    command: uvicorn app.main:app --host=0.0.0.0 --port=5000 --reload
+    volumes:
+    - "sharedspace:/centrifugo"
+    - "./api:/code"
+    networks:
+      - backend
+    depends_on:
+      - centrifugo
+
+
+  redis:
+    image: redis
+    ports:
+    - "6379:6379"
+    networks:
+      - backend

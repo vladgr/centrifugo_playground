@@ -1,0 +1,5 @@
+cent
+fastapi
+pydantic
+uvicorn
+pyjwt
