@@ -49,10 +49,10 @@ async def send_message(request: Request, background_tasks: BackgroundTasks):
         "custom_key2": "custom value 2",
     }
 
-    background_tasks.add_task(publish_to_celery, channel, msg)
+    background_tasks.add_task(publish_task, channel, msg)
     return {"info": "message sent"}
 
 
-def publish_to_celery(channel, msg):
+def publish_task(channel, msg):
     client = Client(CENTRIFUGO_API_URL, api_key=CENTRIFUGO_API_KEY, timeout=3)
     client.publish(channel, msg)
