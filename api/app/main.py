@@ -3,7 +3,7 @@ import time
 
 import jwt
 from cent import Client
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -19,7 +19,7 @@ config = json.load(open("/centrifugo/config.json"))
 
 CENTRIFUGO_API_KEY = config["api_key"]
 CENTRIFUGO_SECRET = config["token_hmac_secret_key"]
-CENTRIFUGO_URL = "http://localhost:8000"
+CENTRIFUGO_API_URL = "http://centrifugo:8000/api"
 
 
 @app.get("/")
@@ -29,26 +29,30 @@ async def home():
 
 @app.get("/get_token")
 async def get_token():
-    claims = {"sub": "something", "exp": int(time.time()) + 24 * 3600}
+    claims = {
+        "sub": "some_user_id_can_be_here",
+        "exp": int(time.time()) + 24 * 3600,
+    }
     token = jwt.encode(claims, CENTRIFUGO_SECRET, algorithm="HS256")
     return {"token": token}
 
 
 @app.post("/send_message")
-async def send_message(request: Request):
-    """Sends message to test-channel"""
+async def send_message(request: Request, background_tasks: BackgroundTasks):
+    """Sends message to news"""
     data = await request.json()
 
     channel = "news"
 
     msg = {
-        "custom_key1": "news",
-        "custom_key2": data.get("anything", ""),
-        "custom_key3": "custom value 3",
-        "custom_key4": "custom value 4",
+        "custom_key1": data.get("anything", ""),
+        "custom_key2": "custom value 2",
     }
 
-    client = Client(CENTRIFUGO_URL, api_key=CENTRIFUGO_API_KEY, timeout=3)
-    client.publish(channel, msg)
+    background_tasks.add_task(publish_to_celery, channel, msg)
+    return {"info": "message sent"}
 
-    return {"success": "ok"}
+
+def publish_to_celery(channel, msg):
+    client = Client(CENTRIFUGO_API_URL, api_key=CENTRIFUGO_API_KEY, timeout=3)
+    client.publish(channel, msg)

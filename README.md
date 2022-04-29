@@ -10,18 +10,6 @@
 docker compose up -d
 ```
 
-### After first start edit "allowed_origins" in config
-
-```
-docker compose exec centrifugo sh
-apk add nano
-nano config.json
-
-edit "allowed_origins": ["http://localhost:5000", "http://localhost:8080"]
-
-docker compose restart
-```
-
 ### View logs
 
 ```

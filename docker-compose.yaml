@@ -16,11 +16,13 @@ services:
     command:
     - |
       centrifugo genconfig --config=/centrifugo/config.json
-      centrifugo --config=/centrifugo/config.json --port=8000 --engine=redis --redis_address="redis://redis:6379" --admin
+      centrifugo --config=/centrifugo/config.json --port=8000 --engine=redis --redis_address="redis://redis:6379" --log_level=debug --admin
     ports:
     - "8000:8000"
     volumes:
     - "sharedspace:/centrifugo"
+    environment:
+      - CENTRIFUGO_ALLOWED_ORIGINS=http://localhost:5000 http://localhost:8080
     depends_on:
       - redis
     ulimits:
@@ -39,6 +41,7 @@ services:
     - "./api:/code"
     depends_on:
       - centrifugo
+
 
   web:
     build: ./web

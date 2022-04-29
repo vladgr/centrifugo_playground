@@ -40,6 +40,8 @@ const centClient = new Centrifuge(wsCentrifugoUrl)
 
 const channelName = 'news'
 
+let subscription
+
 // Connect to Centrifugo as soon as page ready
 document.addEventListener('DOMContentLoaded', async (event) => {
     const token = await apiClient.getToken()
@@ -60,15 +62,20 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 // ------- Buttons handlers
 
 function subscribe() {
-    console.log(`Client subscribed to ${channelName}`)
+    console.log(`Client subscribing to ${channelName}`)
 
-    centClient.subscribe(channelName, (msg) => {
+    subscription = centClient.subscribe(channelName, (msg) => {
         console.log(msg)
     })
 }
 
 function unsubscribe() {
-    console.log('Unsubscribe from news')
+    console.log(`Client1 unsubscribing from ${channelName}`)
+
+    if (subscription != null) {
+        subscription.unsubscribe()
+        subscription = null
+    }
 }
 
 function sendMessage() {
